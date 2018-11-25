@@ -2,28 +2,8 @@ use num_traits::float::Float;
 use num_traits::Num;
 use std::ops::{Add, Mul, Sub};
 
-pub trait LinearSpace<'a, Scalar>
-    where
-        Scalar: Num,
-        Self: 'a + Sized,
-        &'a Self: Add<Output = Self>,
-        &'a Self: Sub<Output = Self>,
-        &'a Self: Mul<Scalar, Output = Self>,
-{
-}
 
-pub trait InnerProdSpace<'a, Scalar>: LinearSpace<'a, Scalar>
-    where
-        Scalar: Num,
-        Self: 'a + Sized,
-        &'a Self: Add<Output = Self>,
-        &'a Self: Sub<Output = Self>,
-        &'a Self: Mul<Scalar, Output = Self>,
-{
-    fn dot(&self, rhs: &Self) -> Scalar;
-}
-
-pub trait PDInnerProdSpace<'a, Scalar>: InnerProdSpace<'a, Scalar>
+pub trait InnerProdSpace<'a, Scalar>
     where
         Scalar: Float,
         Self: 'a + Sized,
@@ -31,16 +11,18 @@ pub trait PDInnerProdSpace<'a, Scalar>: InnerProdSpace<'a, Scalar>
         &'a Self: Sub<Output = Self>,
         &'a Self: Mul<Scalar, Output = Self>,
 {
-    fn distance_to(&'a self, rhs: &'a Self) -> Scalar {
+    fn dot(&self, rhs: &Self) -> Scalar;
+
+    fn distance_to(&'a self, rhs: &'a Self) -> Scalar
+    {
         let d=self-rhs;
         d.dot(&d).sqrt()
-        //self.dot(rhs).sqrt()
     }
 }
 
 
 pub fn kmeans<'a, Scalar, T>(points:Vec<T>, mut seeds:Vec<T>)->Vec<Vec<T>>
-    where T:PDInnerProdSpace<'a,Scalar>,
+    where T:InnerProdSpace<'a,Scalar>,
           &'a T: Add<Output = T>,
           &'a T: Sub<Output = T>,
           &'a T: Mul<Scalar, Output = T>,
@@ -66,8 +48,8 @@ pub fn kmeans<'a, Scalar, T>(points:Vec<T>, mut seeds:Vec<T>)->Vec<Vec<T>>
                     }).expect("").0);
             }
     }
-    //seeds.iter_mut().for_each(|i|{let a=(i as &T)*Scalar::zero();*i=a;});
 
+    //place an empty result here to make the compiler happy
     vec![vec![]]
 }
 
